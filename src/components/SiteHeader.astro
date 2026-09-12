@@ -1,0 +1,69 @@
+---
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { t, rootPathOf, type Locale } from '../i18n';
+
+interface Props {
+  locale?: Locale;
+}
+
+const { locale = 'zh' } = Astro.props;
+const otherLocale: Locale = locale === 'zh' ? 'en' : 'zh';
+const rootPath = rootPathOf(Astro.url.pathname, locale);
+const otherHref = getRelativeLocaleUrl(otherLocale, rootPath.replace(/^\//, ''));
+---
+
+<link rel="stylesheet" href="/pagefind/pagefind-component-ui.css" />
+<script is:inline type="module" src="/pagefind/pagefind-component-ui.js"></script>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href={getRelativeLocaleUrl(locale, '')}>{t(locale, 'site.brand')}</a>
+    <nav class="header-nav" aria-label="Primary">
+      <a href={getRelativeLocaleUrl(locale, 'tags')}>{t(locale, 'nav.tags')}</a>
+      <a href={getRelativeLocaleUrl(locale, 'about')}>{t(locale, 'nav.about')}</a>
+    </nav>
+
+    <div class="header-actions">
+      <pagefind-searchbox
+        show-sub-results
+        placeholder={t(locale, 'search.placeholder')}
+      ></pagefind-searchbox>
+
+      <a
+        class="lang-switch"
+        href={otherHref}
+        hreflang={otherLocale === 'zh' ? 'zh-CN' : 'en'}
+      >
+        {t(locale, 'lang.switch')}
+      </a>
+
+      <button
+        id="theme-toggle"
+        class="theme-toggle"
+        type="button"
+        aria-label={t(locale, 'theme.toggle')}
+        data-pagefind-ignore
+      >
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<script is:inline>
+  var btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var next =
+        document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      window.__applyTheme(next);
+      try { localStorage.setItem('theme', next); } catch (e) {}
+    });
+  }
+</script>

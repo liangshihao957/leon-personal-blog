@@ -1,0 +1,129 @@
+---
+import '../styles/global.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import { t, type Locale } from '../i18n';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  type?: 'website' | 'article';
+  locale?: Locale;
+}
+
+const { title, description, image, type = 'website', locale = 'zh' } = Astro.props;
+const siteTitle = t(locale, 'site.title');
+const siteDesc = t(locale, 'site.desc');
+const fullTitle = title === siteTitle ? siteTitle : `${title} · ${siteTitle}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(image ?? '/images/default-og.jpg', Astro.site);
+const cfAnalyticsToken = import.meta.env.PUBLIC_CF_ANALYTICS_TOKEN as string | undefined;
+const htmlLang = locale === 'zh' ? 'zh-CN' : 'en';
+const ogLocale = locale === 'zh' ? 'zh_CN' : 'en_US';
+---
+
+<!doctype html>
+<html lang={htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description ?? siteDesc} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#f7f7fa" />
+
+    <script is:inline>
+      (function () {
+        function applyTheme(theme) {
+          document.documentElement.dataset.theme = theme;
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', theme === 'dark' ? '#121215' : '#f7f7fa');
+        }
+        window.__applyTheme = applyTheme;
+        var stored = null;
+        try { stored = localStorage.getItem('theme'); } catch (e) {}
+        var theme =
+          stored === 'light' || stored === 'dark'
+            ? stored
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+        applyTheme(theme);
+      })();
+    </script>
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={siteTitle} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description ?? siteDesc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content={ogLocale} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description ?? siteDesc} />
+    <meta name="twitter:image" content={ogImage} />
+
+    {
+      cfAnalyticsToken && (
+        <script
+          is:inline
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: cfAnalyticsToken })}
+        ></script>
+      )
+    }
+  </head>
+  <body>
+    <SiteHeader locale={locale} />
+    <slot />
+
+    <button
+      id="back-to-top"
+      class="back-to-top"
+      type="button"
+      aria-label={t(locale, 'back.top')}
+      data-pagefind-ignore
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 19V5M5 12l7-7 7 7" />
+      </svg>
+    </button>
+
+    <script is:inline>
+      (function () {
+        var btn = document.getElementById('back-to-top');
+        if (!btn) return;
+        function onScroll() {
+          btn.classList.toggle(
+            'visible',
+            (window.scrollY || document.documentElement.scrollTop) > 600,
+          );
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+        btn.addEventListener('click', function () {
+          var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+        });
+      })();
+    </script>
+
+    <footer class="site-footer">
+      <p>{t(locale, 'footer.copyright', { year: new Date().getFullYear() })} · {t(locale, 'footer.powered')}</p>
+      <p class="footer-links">
+        <a href="/rss.xml">RSS</a>
+        <span aria-hidden="true">·</span>
+        <a href="/tags/">{t(locale, 'meta.tags')}</a>
+        <span aria-hidden="true">·</span>
+        <a href="/about/">{t(locale, 'meta.about')}</a>
+      </p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,70 @@
+---
+import { t, type Locale } from '../i18n';
+import type { Page } from 'astro';
+
+interface Props {
+  locale: Locale;
+  page: Page<unknown>;
+}
+
+const { locale, page } = Astro.props;
+
+function pageWindow(current: number, last: number): Array<number | '...'> {
+  const candidates = new Set<number>([1, last, current - 1, current, current + 1]);
+  const nums = [...candidates].filter((n) => n >= 1 && n <= last).sort((a, b) => a - b);
+  const out: Array<number | '...'> = [];
+  let prev = 0;
+  for (const n of nums) {
+    if (n - prev > 1) out.push('...');
+    out.push(n);
+    prev = n;
+  }
+  return out;
+}
+
+const firstUrl = page.url.first ?? page.url.current;
+const pageUrl = (n: number) => (n === 1 ? firstUrl : `${firstUrl}${n}/`);
+const numbers = pageWindow(page.currentPage, page.lastPage);
+---
+
+{
+  page.lastPage > 1 && (
+    <nav class="pagination" aria-label={locale === 'zh' ? '分页导航' : 'Pagination'}>
+      {
+        page.url.prev ? (
+          <a class="page-btn" href={page.url.prev}>{t(locale, 'pagination.prev')}</a>
+        ) : (
+          <span class="page-btn disabled" aria-disabled="true">{t(locale, 'pagination.prev')}</span>
+        )
+      }
+
+      <ul class="page-numbers">
+        {
+          numbers.map((n, i) =>
+            n === '...' ? (
+              <li key={`e${i}`}><span class="page-ellipsis">…</span></li>
+            ) : (
+              <li key={n}>
+                {
+                  n === page.currentPage ? (
+                    <span class="page-num current" aria-current="page">{n}</span>
+                  ) : (
+                    <a class="page-num" href={pageUrl(n)}>{n}</a>
+                  )
+                }
+              </li>
+            ),
+          )
+        }
+      </ul>
+
+      {
+        page.url.next ? (
+          <a class="page-btn" href={page.url.next}>{t(locale, 'pagination.next')}</a>
+        ) : (
+          <span class="page-btn disabled" aria-disabled="true">{t(locale, 'pagination.next')}</span>
+        )
+      }
+    </nav>
+  )
+}

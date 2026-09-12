@@ -1,0 +1,133 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { t, type Locale } from '../../i18n';
+import Comments from '../Comments.astro';
+
+interface Props {
+  locale: Locale;
+  post: {
+    id: string;
+    body: string;
+    data: {
+      title: string;
+      titleEn?: string;
+      description: string;
+      descriptionEn?: string;
+      pubDate: Date;
+      updatedDate?: Date;
+      heroImage?: string;
+      tags: string[];
+    };
+  };
+}
+
+const { locale, post } = Astro.props;
+const title = locale === 'en' ? (post.data.titleEn ?? post.data.title) : post.data.title;
+const description =
+  locale === 'en' ? (post.data.descriptionEn ?? post.data.description) : post.data.description;
+const { Content } = await render(post);
+const dateFmt = new Intl.DateTimeFormat(locale === 'zh' ? 'zh-CN' : 'en-US', {
+  dateStyle: 'long',
+});
+const readingMinutes = Math.max(
+  1,
+  Math.round(post.body.replace(/[#>*`|~\-\[\]()!]/g, '').replace(/\s/g, '').length / 400),
+);
+const allPosts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const currentIndex = allPosts.findIndex((p) => p.id === post.id);
+const prevPost = allPosts[currentIndex - 1];
+const nextPost = allPosts[currentIndex + 1];
+
+const articleUrl = new URL(Astro.url.pathname, Astro.site);
+const schemaData = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description,
+  datePublished: post.data.pubDate.toISOString(),
+  ...(post.data.updatedDate && { dateModified: post.data.updatedDate.toISOString() }),
+  ...(post.data.heroImage && { image: new URL(post.data.heroImage, Astro.site) }),
+  url: articleUrl,
+  author: { '@type': 'Person', name: 'Leon' },
+};
+---
+
+<Layout title={title} description={description} image={post.data.heroImage} type="article" locale={locale}>
+  <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+  <main class="article container">
+    <a class="back" href={getRelativeLocaleUrl(locale, '')}>{t(locale, 'back.home')}</a>
+
+    <header class="article-head">
+      <h1>{title}</h1>
+      <p class="meta">
+        <time datetime={post.data.pubDate.toISOString()}>
+          {dateFmt.format(post.data.pubDate)}
+        </time>
+        <span> · {t(locale, 'read.minutes', { n: readingMinutes })}</span>
+        {
+          post.data.updatedDate && (
+            <span> · {t(locale, 'updated.on')} {dateFmt.format(post.data.updatedDate)}</span>
+          )
+        }
+      </p>
+      {
+        post.data.tags.length > 0 && (
+          <ul class="tags">
+            {post.data.tags.map((tag) => (
+              <li>
+                <a href={getRelativeLocaleUrl(locale, `tags/${encodeURIComponent(tag)}`)}>
+                  {tag}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </header>
+
+    {
+      post.data.heroImage && (
+        <img
+          class="article-cover"
+          src={post.data.heroImage}
+          alt={title}
+          width="1200"
+          height="675"
+        />
+      )
+    }
+
+    <article class="article-content">
+      <Content />
+    </article>
+
+    <nav class="post-nav" aria-label={locale === 'zh' ? '上一篇和下一篇' : 'Previous and next post'}>
+      {
+        prevPost && (
+          <a class="post-nav-item" href={getRelativeLocaleUrl(locale, `blog/${prevPost.id}`)}>
+            <span class="post-nav-label">{t(locale, 'prev.post')}</span>
+            <span class="post-nav-title">
+              {locale === 'en' ? (prevPost.data.titleEn ?? prevPost.data.title) : prevPost.data.title}
+            </span>
+          </a>
+        )
+      }
+      {
+        nextPost && (
+          <a class="post-nav-item next" href={getRelativeLocaleUrl(locale, `blog/${nextPost.id}`)}>
+            <span class="post-nav-label">{t(locale, 'next.post')}</span>
+            <span class="post-nav-title">
+              {locale === 'en' ? (nextPost.data.titleEn ?? nextPost.data.title) : nextPost.data.title}
+            </span>
+          </a>
+        )
+      }
+    </nav>
+
+    <Comments locale={locale} />
+  </main>
+</Layout>

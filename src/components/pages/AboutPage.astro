@@ -1,0 +1,78 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { t, type Locale } from '../../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<Layout title={t(locale, 'meta.about')} description={t(locale, 'meta.about.desc')} locale={locale}>
+  <main class="container page">
+    <a class="back" href={getRelativeLocaleUrl(locale, '')}>{t(locale, 'back.home')}</a>
+    <header class="page-head">
+      <h1>{t(locale, 'meta.about')}</h1>
+      <p>{t(locale, 'about.sub')}</p>
+    </header>
+
+    {
+      locale === 'en' ? (
+        <article class="about-content">
+          <section>
+            <h2>About Me</h2>
+            <p>
+              Hi, I'm <strong>Leon</strong>. This is my little corner on the web for
+              tech notes and life writing. The content here is a placeholder draft —
+              replace it with your real introduction.
+            </p>
+          </section>
+          <section>
+            <h2>About This Blog</h2>
+            <p>
+              Built with <strong>Astro</strong>, statically generated, and deployed on
+              <strong>Cloudflare Pages</strong>. It supports dark mode, on-site search,
+              and bilingual content. All posts are maintained as Markdown.
+            </p>
+          </section>
+          <section>
+            <h2>Contact</h2>
+            <p>Feel free to reach out:</p>
+            <ul>
+              <li>GitHub: <code>your-github-username</code></li>
+              <li>Email: <code>you@example.com</code></li>
+            </ul>
+          </section>
+        </article>
+      ) : (
+        <article class="about-content">
+          <section>
+            <h2>关于我</h2>
+            <p>
+              你好，我是 <strong>Leon</strong>。这里是属于我的一个小角落，
+              用来记录技术笔记与生活随笔。这里的内容只是初稿占位，请替换成你的真实介绍。
+            </p>
+          </section>
+          <section>
+            <h2>关于这个博客</h2>
+            <p>
+              本站使用 <strong>Astro</strong> 构建，纯静态生成，部署在
+              <strong>Cloudflare Pages</strong> 上，支持暗色模式、站内搜索与中英双语。
+              所有文章源码以 Markdown 形式维护。
+            </p>
+          </section>
+          <section>
+            <h2>联系我</h2>
+            <p>欢迎通过以下方式交流：</p>
+            <ul>
+              <li>GitHub：<code>your-github-username</code></li>
+              <li>邮箱：<code>you@example.com</code></li>
+            </ul>
+          </section>
+        </article>
+      )
+    }
+  </main>
+</Layout>

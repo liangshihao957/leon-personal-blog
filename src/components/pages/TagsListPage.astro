@@ -1,0 +1,51 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { t, type Locale } from '../../i18n';
+import Pagination from '../Pagination.astro';
+import type { Page } from 'astro';
+
+interface Props {
+  locale: Locale;
+  tag: string;
+  page: Page<{ id: string; data: Record<string, any> }>;
+}
+
+const { locale, tag, page } = Astro.props;
+const dateFmt = new Intl.DateTimeFormat(locale === 'zh' ? 'zh-CN' : 'en-US', {
+  dateStyle: 'long',
+});
+const titleOf = (post: { data: { title: string; titleEn?: string } }) =>
+  locale === 'en' ? (post.data.titleEn ?? post.data.title) : post.data.title;
+---
+
+<Layout
+  title={`${t(locale, 'meta.tags')}：${tag}`}
+  description={t(locale, 'meta.tags.desc')}
+  locale={locale}
+>
+  <main class="container page">
+    <a class="back" href={getRelativeLocaleUrl(locale, 'tags')}>{t(locale, 'back.tags')}</a>
+    <header class="page-head">
+      <h1>{tag}</h1>
+      <p>{t(locale, 'posts.count', { n: page.total })}</p>
+    </header>
+
+    <ul class="tag-post-list">
+      {
+        page.data.map((post) => (
+          <li>
+            <a href={getRelativeLocaleUrl(locale, `blog/${post.id}`)}>
+              <time datetime={post.data.pubDate.toISOString()}>
+                {dateFmt.format(post.data.pubDate)}
+              </time>
+              <span>{titleOf(post)}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <Pagination locale={locale} page={page} />
+  </main>
+</Layout>

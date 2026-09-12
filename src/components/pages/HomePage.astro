@@ -1,0 +1,89 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { t, type Locale } from '../../i18n';
+import Pagination from '../Pagination.astro';
+import type { Page } from 'astro';
+
+interface Props {
+  locale: Locale;
+  page: Page<{ id: string; data: Record<string, any> }>;
+}
+
+const { locale, page } = Astro.props;
+const siteTitle = t(locale, 'site.title');
+const siteDesc = t(locale, 'site.desc');
+const dateFmt = new Intl.DateTimeFormat(locale === 'zh' ? 'zh-CN' : 'en-US', {
+  dateStyle: 'long',
+});
+const pad = (n: number) => String(n).padStart(2, '0');
+const titleOf = (post: { data: { title: string; titleEn?: string } }) =>
+  locale === 'en' ? (post.data.titleEn ?? post.data.title) : post.data.title;
+const descOf = (post: { data: { description: string; descriptionEn?: string } }) =>
+  locale === 'en' ? (post.data.descriptionEn ?? post.data.description) : post.data.description;
+const siteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteTitle,
+  description: siteDesc,
+  url: Astro.site,
+};
+---
+
+<Layout title={siteTitle} description={siteDesc} locale={locale}>
+  <script type="application/ld+json" set:html={JSON.stringify(siteSchema)} />
+  <header class="hero container">
+    <p class="hero-eyebrow">{t(locale, 'hero.eyebrow')}</p>
+    <h1>{siteTitle}</h1>
+    <p class="hero-sub">{t(locale, 'hero.sub')}</p>
+  </header>
+
+  <main class="container">
+    <div class="section-head">
+      <h2>{t(locale, 'section.latest')}</h2>
+    </div>
+
+    <ul class="posts">
+      {
+        page.data.map((post, i) => (
+          <li class="post-card">
+            {
+              post.data.heroImage && (
+                <a class="post-cover" href={getRelativeLocaleUrl(locale, `blog/${post.id}`)}>
+                  <img src={post.data.heroImage} alt="" loading="lazy" />
+                </a>
+              )
+            }
+            <div class="post-body">
+              <div class="post-meta">
+                <span class="post-index">{pad((page.currentPage - 1) * page.size + i + 1)}</span>
+                <time class="post-date" datetime={post.data.pubDate.toISOString()}>
+                  {dateFmt.format(post.data.pubDate)}
+                </time>
+              </div>
+              <a class="post-link" href={getRelativeLocaleUrl(locale, `blog/${post.id}`)}>
+                <h3 class="post-title">{titleOf(post)}</h3>
+                <p class="post-desc">{descOf(post)}</p>
+              </a>
+              {
+                post.data.tags.length > 0 && (
+                  <ul class="tags">
+                    {post.data.tags.map((tag) => (
+                      <li>
+                        <a href={getRelativeLocaleUrl(locale, `tags/${encodeURIComponent(tag)}`)}>
+                          {tag}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              }
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    <Pagination locale={locale} page={page} />
+  </main>
+</Layout>

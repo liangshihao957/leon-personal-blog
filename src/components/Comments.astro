@@ -1,0 +1,49 @@
+---
+import { t, rootPathOf, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const serverURL = import.meta.env.PUBLIC_WALINE_SERVER_URL as string | undefined;
+const rootPath = rootPathOf(Astro.url.pathname, locale);
+const walineLang = locale === 'zh' ? 'zh-CN' : 'en-US';
+---
+
+{
+  serverURL && (
+    <section
+      class="comments"
+      data-pagefind-ignore
+      data-waline-root={rootPath}
+      data-waline-lang={walineLang}
+    >
+      <h2 class="comments-title">{t(locale, 'comments.title')}</h2>
+      <div id="waline"></div>
+    </section>
+  )
+}
+
+<script>
+  const serverURL = import.meta.env.PUBLIC_WALINE_SERVER_URL as string | undefined;
+  const section = document.querySelector<HTMLElement>('.comments[data-waline-root]');
+
+  (async () => {
+    if (!serverURL || !section) return;
+    const { init } = await import('@waline/client/full');
+    await import('@waline/client/waline.css');
+    init({
+      el: section.querySelector('#waline'),
+      serverURL,
+      lang: section.dataset.walineLang ?? 'zh-CN',
+      dark: 'html[data-theme="dark"]',
+      path: section.dataset.walineRoot,
+      // unpkg 在部分网络不可达，改用 jsdelivr 提供表情资源
+      emoji: [
+        'https://cdn.jsdelivr.net/npm/@waline/emojis@1.1.0/weibo',
+        'https://cdn.jsdelivr.net/npm/@waline/emojis@1.1.0/alus',
+      ],
+    });
+  })();
+</script>
