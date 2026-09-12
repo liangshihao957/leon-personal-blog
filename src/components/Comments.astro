@@ -45,5 +45,13 @@ const walineLang = locale === 'zh' ? 'zh-CN' : 'en-US';
         'https://cdn.jsdelivr.net/npm/@waline/emojis@1.1.0/alus',
       ],
     });
+
+    // 阅读量：填充 .waline-pageview-count 元素并在查询时自增
+    const { pageviewCount } = await import('@waline/client/pageview');
+    pageviewCount({
+      serverURL,
+      path: section.dataset.walineRoot,
+      lang: section.dataset.walineLang ?? 'zh-CN',
+    });
   })();
 </script>

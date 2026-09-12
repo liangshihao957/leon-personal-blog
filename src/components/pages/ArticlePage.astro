@@ -24,6 +24,7 @@ interface Props {
 }
 
 const { locale, post } = Astro.props;
+const serverURL = import.meta.env.PUBLIC_WALINE_SERVER_URL as string | undefined;
 const title = locale === 'en' ? (post.data.titleEn ?? post.data.title) : post.data.title;
 const description =
   locale === 'en' ? (post.data.descriptionEn ?? post.data.description) : post.data.description;
@@ -71,6 +72,15 @@ const schemaData = {
         {
           post.data.updatedDate && (
             <span> · {t(locale, 'updated.on')} {dateFmt.format(post.data.updatedDate)}</span>
+          )
+        }
+        {
+          serverURL && (
+            <span class="pageview">
+              {' · '}
+              <span class="waline-pageview-count"></span>
+              {locale === 'zh' ? ' 阅读' : ' reads'}
+            </span>
           )
         }
       </p>
