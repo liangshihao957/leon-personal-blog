@@ -36,6 +36,8 @@ const translations = {
     'pagination.prev': '上一页',
     'pagination.next': '下一页',
     'comments.title': '评论',
+    'footer.visits': '全站访问',
+    'footer.visits.suffix': '次',
   },
   en: {
     'site.title': "Leon's Blog",
@@ -68,6 +70,8 @@ const translations = {
     'pagination.prev': 'Prev',
     'pagination.next': 'Next',
     'comments.title': 'Comments',
+    'footer.visits': 'Total visits',
+    'footer.visits.suffix': '',
   },
 } as const;
 
